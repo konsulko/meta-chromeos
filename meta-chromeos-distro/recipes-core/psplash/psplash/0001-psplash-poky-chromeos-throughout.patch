@@ -1,0 +1,80 @@
+From 62941cb3c63d6a1a0531903f478278dea834a1ef Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Tue, 12 Jul 2022 21:46:11 -0700
+Subject: [PATCH] psplash: poky -> chromeos throughout
+
+Use the ChromeOS dark themed logo (modified with Yocto hints)
+
+Upstream-Status: Inappropriate (chromeos specific)
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+
+---
+ Makefile.am |  8 ++++----
+ psplash.c   | 18 +++++++++---------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 310e126..380ed49 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -5,8 +5,8 @@ AM_CFLAGS = $(GCC_FLAGS) $(EXTRA_GCC_FLAGS) -D_GNU_SOURCE -DFONT_HEADER=\"$(FONT
+ psplash_SOURCES = psplash.c psplash.h psplash-fb.c psplash-fb.h \
+                   psplash-console.c psplash-console.h           \
+ 		  psplash-colors.h psplash-config.h		\
+-		  psplash-poky-img.h psplash-bar-img.h $(FONT_NAME)-font.h
+-BUILT_SOURCES = psplash-poky-img.h psplash-bar-img.h
++		  psplash-chromeos-img.h psplash-bar-img.h $(FONT_NAME)-font.h
++BUILT_SOURCES = psplash-chromeos-img.h psplash-bar-img.h
+ 
+ psplash_write_SOURCES = psplash-write.c psplash.h
+ 
+@@ -28,6 +28,6 @@ snapshot:
+ 
+ psplash-bar-img.h: base-images/psplash-bar.png
+ 	$(top_srcdir)/make-image-header.sh $< BAR
+-psplash-poky-img.h: base-images/psplash-poky.png
+-	$(top_srcdir)/make-image-header.sh $< POKY
++psplash-chromeos-img.h: base-images/psplash-chromeos.png
++	$(top_srcdir)/make-image-header.sh $< CHROMEOS
+ 
+diff --git a/psplash.c b/psplash.c
+index ee1af6b..cae86d6 100644
+--- a/psplash.c
++++ b/psplash.c
+@@ -13,7 +13,7 @@
+ #include "psplash.h"
+ #include "psplash-config.h"
+ #include "psplash-colors.h"
+-#include "psplash-poky-img.h"
++#include "psplash-chromeos-img.h"
+ #include "psplash-bar-img.h"
+ #ifdef HAVE_SYSTEMD
+ #include <systemd/sd-daemon.h>
+@@ -302,18 +302,18 @@ main (int argc, char** argv)
+ 
+   /* Draw the Poky logo  */
+   psplash_fb_draw_image (fb, 
+-			 (fb->width  - POKY_IMG_WIDTH)/2, 
++			 (fb->width  - CHROMEOS_IMG_WIDTH)/2, 
+ #if PSPLASH_IMG_FULLSCREEN
+-			 (fb->height - POKY_IMG_HEIGHT)/2,
++			 (fb->height - CHROMEOS_IMG_HEIGHT)/2,
+ #else
+ 			 (fb->height * PSPLASH_IMG_SPLIT_NUMERATOR
+-			  / PSPLASH_IMG_SPLIT_DENOMINATOR - POKY_IMG_HEIGHT)/2,
++			  / PSPLASH_IMG_SPLIT_DENOMINATOR - CHROMEOS_IMG_HEIGHT)/2,
+ #endif
+-			 POKY_IMG_WIDTH,
+-			 POKY_IMG_HEIGHT,
+-			 POKY_IMG_BYTES_PER_PIXEL,
+-			 POKY_IMG_ROWSTRIDE,
+-			 POKY_IMG_RLE_PIXEL_DATA);
++			 CHROMEOS_IMG_WIDTH,
++			 CHROMEOS_IMG_HEIGHT,
++			 CHROMEOS_IMG_BYTES_PER_PIXEL,
++			 CHROMEOS_IMG_ROWSTRIDE,
++			 CHROMEOS_IMG_RLE_PIXEL_DATA);
+ 
+ #ifdef PSPLASH_SHOW_PROGRESS_BAR
+   /* Draw progress bar border */

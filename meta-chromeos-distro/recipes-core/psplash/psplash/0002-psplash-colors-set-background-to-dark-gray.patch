@@ -1,0 +1,39 @@
+From 7a374a06457c1171fabda9e2364ba1de0c2ab77a Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Tue, 30 Aug 2022 16:03:46 -0700
+Subject: [PATCH] psplash-colors: set background to dark gray
+
+Set PSPLASH_BACKGROUND_COLOR and PSPLASH_BAR_BACKGROUND_COLOR
+in psplash-colors.h to 0x1f, 0x1f, 0x1f
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+---
+ psplash-colors.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/psplash-colors.h b/psplash-colors.h
+index 82a9893..f8c5908 100644
+--- a/psplash-colors.h
++++ b/psplash-colors.h
+@@ -12,7 +12,7 @@
+ #define _HAVE_PSPLASH_COLORS_H
+ 
+ /* This is the overall background color */
+-#define PSPLASH_BACKGROUND_COLOR 0xec,0xec,0xe1
++#define PSPLASH_BACKGROUND_COLOR 0x1f,0x1f,0x1f
+ 
+ /* This is the color of any text output */
+ #define PSPLASH_TEXT_COLOR 0x6d,0x6d,0x70
+@@ -21,6 +21,6 @@
+ #define PSPLASH_BAR_COLOR 0x6d,0x6d,0x70
+ 
+ /* This is the color of the progress bar background */
+-#define PSPLASH_BAR_BACKGROUND_COLOR 0xec,0xec,0xe1
++#define PSPLASH_BAR_BACKGROUND_COLOR 0x1f,0x1f,0x1f
+ 
+ #endif
+-- 
+2.34.1
+
