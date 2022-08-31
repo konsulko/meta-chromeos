@@ -1,0 +1,29 @@
+# CHROMEOSBBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+CHROMEOS_BBLAYERS_CONF_VERSION = "2"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+# Use the https://github.com/konsulko/chromeos-yocto-manifest
+# repository to ensure you clone the correct layers and revisions
+BBLAYERS ?= " \
+  ##OEROOT##/meta \
+  ##OEROOT##/meta-yocto-bsp \
+  ##OEROOT##/../meta-arm/meta-arm-bsp \
+  ##OEROOT##/../meta-arm/meta-arm \
+  ##OEROOT##/../meta-arm/meta-arm-toolchain \
+  ##OEROOT##/../meta-intel \
+  ##OEROOT##/../meta-qcom \
+  ##OEROOT##/../meta-clang \
+  ##OEROOT##/../meta-security \
+  ##OEROOT##/../meta-openembedded/meta-oe \
+  ##OEROOT##/../meta-openembedded/meta-python \
+  ##OEROOT##/../meta-openembedded/meta-perl \
+  ##OEROOT##/../meta-openembedded/meta-networking \
+  ##OEROOT##/../meta-selinux \
+  ##OEROOT##/../meta-browser/meta-chromium \
+  ##OEROOT##/../meta-chromeos/meta-chromeos-distro \
+  ##OEROOT##/../meta-chromeos/meta-chromeos-bsp \
+  ##OEROOT##/../meta-chromeos/meta-chromeos-base \
+  "
