@@ -1,0 +1,29 @@
+Index: b/brillo/cryptohome.cc
+===================================================================
+--- a/brillo/cryptohome.cc
++++ b/brillo/cryptohome.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "brillo/cryptohome.h"
+ 
++#include <openssl/evp.h>
+ #include <openssl/sha.h>
+ #include <stdint.h>
+ 
+@@ -86,11 +87,11 @@ std::string SanitizeUserNameWithSalt(con
+   std::string lowercase(username);
+   std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
+                  ::tolower);
+-  SHA_CTX ctx;
+-  SHA1_Init(&ctx);
+-  SHA1_Update(&ctx, salt.data(), salt.size());
+-  SHA1_Update(&ctx, lowercase.data(), lowercase.size());
+-  SHA1_Final(binmd, &ctx);
++  EVP_MD_CTX* ctx;
++  EVP_DigestInit_ex((ctx = EVP_MD_CTX_new()), EVP_sha1(), NULL);
++  EVP_DigestUpdate(ctx, salt.data(), salt.size());
++  EVP_DigestUpdate(ctx, lowercase.data(), lowercase.size());
++  EVP_DigestFinal_ex(ctx, binmd, NULL);
+   std::string final = base::HexEncode(binmd, sizeof(binmd));
+   // Stay compatible with CryptoLib::HexEncodeToBuffer()
+   std::transform(final.begin(), final.end(), final.begin(), ::tolower);
