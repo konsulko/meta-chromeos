@@ -1,0 +1,13 @@
+Index: authpolicy/tgt_manager.cc
+===================================================================
+--- authpolicy.orig/tgt_manager.cc
++++ authpolicy/tgt_manager.cc
+@@ -700,7 +700,7 @@ void TgtManager::UpdateTgtAutoRenewal()
+                      << lifetime;
+       } else {
+         // Trigger the renewal somewhere in the validity lifetime of the TGT.
+-        int delay_seconds = static_cast<int>(lifetime.validity_seconds() *
++        int delay_seconds = static_cast<int>(static_cast<float>(lifetime.validity_seconds()) *
+                                              kTgtRenewValidityLifetimeFraction);
+ 
+         // Make sure we don't trigger excessively often in case the renewal
