@@ -1,0 +1,13 @@
+Index: libbrillo/brillo/blkdev_utils/lvm_device.cc
+===================================================================
+--- libbrillo.orig/brillo/blkdev_utils/lvm_device.cc
++++ libbrillo/brillo/blkdev_utils/lvm_device.cc
+@@ -297,7 +297,7 @@ bool Thinpool::GetFreeSpace(int64_t* siz
+     return false;
+   }
+ 
+-  *size = static_cast<int64_t>((100.0 - used_percent) / 100.0 * total_size);
++  *size = static_cast<int64_t>((100.0 - used_percent) / 100.0 * static_cast<double>(total_size));
+ 
+   return true;
+ }
