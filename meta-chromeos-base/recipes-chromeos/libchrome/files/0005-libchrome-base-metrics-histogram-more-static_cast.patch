@@ -1,0 +1,48 @@
+From c0886f624d6fbae822a1d5151b69fbcca8600b42 Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 13:46:04 -0700
+Subject: [PATCH] libchrome: base/metrics/histogram more static_cast
+
+Fix errors like:
+
+error: implicit conversion from 'unsigned long' to 'double' may lose
+precision [-We
+rror,-Wimplicit-int-float-conversion]
+|         (min * (bucket_count - 1 - i) + max * (i - 1)) / (bucket_count
+- 2);
+|                                                        ~
+~~~~~~~~~~~~~^~~
+|
+error: implicit conversion from 'unsigned long' to 'double' may lose
+precision [-We
+rror,-Wimplicit-int-float-conversion]
+|         (min * (bucket_count - 1 - i) + max * (i - 1)) / (bucket_count
+- 2);
+|                                             ~  ~~^~~
+|
+error: implicit conversion from 'unsigned long' to 'double' may lose
+precision [-We
+rror,-Wimplicit-int-float-conversion]
+|         (min * (bucket_count - 1 - i) + max * (i - 1)) / (bucket_count
+- 2);
+|              ~  ~~~~~~~~~~~~~~~~~^~~
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I5b85bd45f57ed325fe311cced6a9827c14e61614
+---
+ base/metrics/histogram.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/base/metrics/histogram.cc
+===================================================================
+--- a/base/metrics/histogram.cc
++++ b/base/metrics/histogram.cc
+@@ -840,7 +840,7 @@ void LinearHistogram::InitializeBucketRa
+ 
+   for (size_t i = 1; i < bucket_count; ++i) {
+     double_t linear_range =
+-        (min * (bucket_count - 1 - i) + max * (i - 1)) / (bucket_count - 2);
++        (min * static_cast<double_t>(bucket_count - 1 - i) + max * static_cast<double_t>(i - 1)) / static_cast<double_t>(bucket_count - 2);
+     uint32_t range = static_cast<Sample>(linear_range + 0.5);
+     ranges->set_range(i, range);
+   }

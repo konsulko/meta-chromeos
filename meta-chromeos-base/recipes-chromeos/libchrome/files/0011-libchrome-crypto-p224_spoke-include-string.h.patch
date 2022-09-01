@@ -1,0 +1,28 @@
+From 9b596bb810bdd7229a5f1d40e9d0a1e656dcb586 Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 20:09:39 -0700
+Subject: [PATCH] libchrome: crypto/p224_spoke include string.h
+
+Needed for memcpy and friends.
+
+Fixes:
+error: use of undeclared identifier 'memset'; did you mean 'wmemset'?
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: If6c5b9c97bdb212ba89eff12c287ebc96f2d04f5
+---
+ crypto/p224_spake.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+Index: b/crypto/p224_spake.h
+===================================================================
+--- a/crypto/p224_spake.h
++++ b/crypto/p224_spake.h
+@@ -8,6 +8,7 @@
+ #include <crypto/p224.h>
+ #include <crypto/sha2.h>
+ #include <stdint.h>
++#include <string.h>
+ 
+ #include "base/gtest_prod_util.h"
+ #include "base/strings/string_piece.h"

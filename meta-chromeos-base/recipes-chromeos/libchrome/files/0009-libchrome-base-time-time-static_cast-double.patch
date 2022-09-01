@@ -1,0 +1,30 @@
+From 05d83daa48d5482efc5dc26870783d04945109bc Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 19:32:39 -0700
+Subject: [PATCH] libchrome: base/time/time static_cast double
+
+Fix error:
+error: implicit conversion from 'const __time_t' (aka 'const long') to
+'double' may lose precision [-Werror,-Wimplicit-int-float-conversion]
+|   return FromDoubleT(ts.tv_sec +
+|                      ~~~^~~~~~ ~
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I35d2e8c2c92acd97c9d72796be2e99d3e941f8c2
+---
+ base/time/time.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/base/time/time.cc
+===================================================================
+--- a/base/time/time.cc
++++ b/base/time/time.cc
+@@ -182,7 +182,7 @@ double Time::ToDoubleT() const {
+ #if BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
+ // static
+ Time Time::FromTimeSpec(const timespec& ts) {
+-  return FromDoubleT(ts.tv_sec +
++  return FromDoubleT(static_cast<double>(ts.tv_sec) +
+                      static_cast<double>(ts.tv_nsec) / kNanosecondsPerSecond);
+ }
+ #endif

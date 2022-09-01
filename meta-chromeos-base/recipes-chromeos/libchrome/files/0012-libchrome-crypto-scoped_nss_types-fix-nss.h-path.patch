@@ -1,0 +1,27 @@
+From 40e27075d1d2774b141fd91a289c514c101f8849 Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 20:17:02 -0700
+Subject: [PATCH] libchrome: crypto/scoped_nss_types fix nss.h path
+
+finds the GNU header, but we need the NSS header which is
+found in nss3/nss.h path.
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I86c45e57bbc8b415a231545f9ad0884acd043dc9
+---
+ crypto/scoped_nss_types.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/crypto/scoped_nss_types.h
+===================================================================
+--- a/crypto/scoped_nss_types.h
++++ b/crypto/scoped_nss_types.h
+@@ -6,7 +6,7 @@
+ #define CRYPTO_SCOPED_NSS_TYPES_H_
+ 
+ #include <keyhi.h>
+-#include <nss.h>
++#include <nss3/nss.h>
+ #include <pk11pub.h>
+ #include <plarena.h>
+ 

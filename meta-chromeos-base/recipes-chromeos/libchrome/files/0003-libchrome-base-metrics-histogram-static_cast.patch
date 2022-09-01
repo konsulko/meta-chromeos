@@ -1,0 +1,34 @@
+From 398078620915ece7a92a004316bada57f2e71b17 Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 12:09:07 -0700
+Subject: [PATCH] libchrome: base/metrics/histogram static_cast
+
+Avoid:
+error: implicit conversion from 'unsigned long' to 'double' may lose
+precision [-We
+rror,-Wimplicit-int-float-conversion]
+|     log_ratio = (log_max - log_current) / (bucket_count -
+bucket_index);
+|                                         ~  ~~~~~~~~~~~~~^~~~~~~~~~~~~~
+
+By static_casting the denominator to double_t
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: Iab55c40e210515914b624a0fdf8d263cd22d435e
+---
+ base/metrics/histogram.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/base/metrics/histogram.cc
+===================================================================
+--- a/base/metrics/histogram.cc
++++ b/base/metrics/histogram.cc
+@@ -350,7 +350,7 @@ void Histogram::InitializeBucketRanges(S
+     log_current = log(static_cast<double_t>(current));
+     debug::Alias(&log_current);
+     // Calculate the count'th root of the range.
+-    log_ratio = (log_max - log_current) / (bucket_count - bucket_index);
++    log_ratio = (log_max - log_current) / static_cast<double_t>(bucket_count - bucket_index);
+     // See where the next bucket would start.
+     log_next = log_current + log_ratio;
+     Sample next;

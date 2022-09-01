@@ -1,0 +1,65 @@
+From 58f04b549865fdb6c26ba5874980137f08d6e8bd Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Tue, 26 Jul 2022 08:28:40 -0700
+Subject: [PATCH] libchrome: crypto/secure_hash port to EVP
+
+The SHA*_Init and other functions have been deprecated for quite some
+time and throw an error in OpenSSL 3.0.y
+
+As intended by upstream, use the higher level EVP_* functions.
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: Ic2c8784f0b758d028aebb84bd66e4d21f15a42a7
+---
+ crypto/secure_hash.cc | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/crypto/secure_hash.cc b/crypto/secure_hash.cc
+index 4886ab45c2..30c344a2aa 100644
+--- a/crypto/secure_hash.cc
++++ b/crypto/secure_hash.cc
+@@ -9,6 +9,7 @@
+ #else
+ #include <openssl/crypto.h>
+ #endif
++#include <openssl/evp.h>
+ #include <openssl/sha.h>
+ #include <stddef.h>
+ 
+@@ -24,7 +25,7 @@ namespace {
+ class SecureHashSHA256 : public SecureHash {
+  public:
+   SecureHashSHA256() {
+-    SHA256_Init(&ctx_);
++    EVP_DigestInit_ex((ctx_ = EVP_MD_CTX_new()), EVP_sha256(), NULL);
+   }
+ 
+   SecureHashSHA256(const SecureHashSHA256& other) : SecureHash() {
+@@ -36,13 +37,13 @@ class SecureHashSHA256 : public SecureHash {
+   }
+ 
+   void Update(const void* input, size_t len) override {
+-    SHA256_Update(&ctx_, static_cast<const unsigned char*>(input), len);
++    EVP_DigestUpdate(ctx_, static_cast<const unsigned char*>(input), len);
+   }
+ 
+   void Finish(void* output, size_t len) override {
+     ScopedOpenSSLSafeSizeBuffer<SHA256_DIGEST_LENGTH> result(
+         static_cast<unsigned char*>(output), len);
+-    SHA256_Final(result.safe_buffer(), &ctx_);
++    EVP_DigestFinal_ex(ctx_, result.safe_buffer(), NULL);
+   }
+ 
+   SecureHash* Clone() const override {
+@@ -52,7 +53,7 @@ class SecureHashSHA256 : public SecureHash {
+   size_t GetHashLength() const override { return SHA256_DIGEST_LENGTH; }
+ 
+  private:
+-  SHA256_CTX ctx_;
++  EVP_MD_CTX* ctx_;
+ };
+ 
+ }  // namespace
+-- 
+2.34.1
+

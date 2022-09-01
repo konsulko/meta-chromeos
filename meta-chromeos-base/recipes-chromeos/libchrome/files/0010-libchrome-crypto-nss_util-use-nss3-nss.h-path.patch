@@ -1,0 +1,27 @@
+From 4e39943c62dcd82b5e48122a0b33004b1dc4cc9b Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 20:01:16 -0700
+Subject: [PATCH] libchrome: crypto/nss_util use nss3/nss.h path
+
+is finding the GNU definition, rather than the one we
+want which is in nss3/nss.h
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I7a6e36f6b59ed1a6538b9ee1dffa30d00abf5995
+---
+ crypto/nss_util.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/crypto/nss_util.cc
+===================================================================
+--- a/crypto/nss_util.cc
++++ b/crypto/nss_util.cc
+@@ -4,7 +4,7 @@
+ 
+ #include "crypto/nss_util.h"
+ 
+-#include <nss.h>
++#include <nss3/nss.h>
+ #include <pk11pub.h>
+ #include <plarena.h>
+ #include <prerror.h>

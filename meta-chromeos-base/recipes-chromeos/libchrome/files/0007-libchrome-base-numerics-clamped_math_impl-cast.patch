@@ -1,0 +1,30 @@
+From eb284f88df092dc033b19dc9bb604bc2d3c6603f Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 18:01:46 -0700
+Subject: [PATCH] libchrome: base/numerics/clamped_math_impl cast
+
+Use static_cast<result_type>(x) OP static_cast<result_type>(y) to fix:
+error: implicit conversion from 'long' to 'double' may lose precision
+[-Werror,-Wimplicit-int-float-conversion]
+| BASE_FLOAT_ARITHMETIC_OPS(Mul, *)
+| ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I4145e05be9060050ed10f1878dcb484fce8a50c6
+---
+ base/numerics/clamped_math_impl.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/base/numerics/clamped_math_impl.h
+===================================================================
+--- a/base/numerics/clamped_math_impl.h
++++ b/base/numerics/clamped_math_impl.h
+@@ -322,7 +322,7 @@ struct ClampedMinOp<
+     using result_type = typename MaxExponentPromotion<T, U>::type;       \
+     template <typename V = result_type>                                  \
+     static constexpr V Do(T x, U y) {                                    \
+-      return saturated_cast<V>(x OP y);                                  \
++      return saturated_cast<V>(static_cast<result_type>(x) OP static_cast<result_type>(y));                                  \
+     }                                                                    \
+   };
+ 

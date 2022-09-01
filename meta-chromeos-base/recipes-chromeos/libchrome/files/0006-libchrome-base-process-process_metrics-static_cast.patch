@@ -1,0 +1,33 @@
+From 5be025826cfa1883679d224bc10b5553318cf4da Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 14:04:09 -0700
+Subject: [PATCH] libchrome: base/process/process_metrics static_cast
+
+Fix error:
+
+error: implicit conversion from 'const int64_t' (aka 'const long') to
+'double'
+ may lose precision [-Werror,-Wimplicit-int-float-conversion]
+|     events_per_second = ClampRound(events_delta /
+time_delta.InSecondsF());
+|                                    ^~~~~~~~~~~~ ~
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: Ib47c36228c0d37f781ba09114704d6241a3a1693
+---
+ base/process/process_metrics.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/base/process/process_metrics.cc
+===================================================================
+--- a/base/process/process_metrics.cc
++++ b/base/process/process_metrics.cc
+@@ -29,7 +29,7 @@ int CalculateEventsPerSecond(uint64_t ev
+     const int64_t events_delta = event_count - *last_event_count;
+     const base::TimeDelta time_delta = time - *last_calculated;
+     DCHECK(!time_delta.is_zero());
+-    events_per_second = ClampRound(events_delta / time_delta.InSecondsF());
++    events_per_second = ClampRound(static_cast<double>(events_delta) / time_delta.InSecondsF());
+   }
+ 
+   *last_calculated = time;

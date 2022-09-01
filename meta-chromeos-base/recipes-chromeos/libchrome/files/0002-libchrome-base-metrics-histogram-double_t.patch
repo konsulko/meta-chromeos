@@ -1,0 +1,57 @@
+From ff7bc7ee69adaccc8dff2023deb5cebde9c6031b Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 11:35:38 -0700
+Subject: [PATCH] libchrome: base/metrics/histogram double_t
+
+Avoid compiler warnings/errors about loss of precision of size_t by
+using more portable double_t.
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I71dba0b4deaac92af40feaa295e4f936a5413931
+---
+ base/metrics/histogram.cc | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+Index: b/base/metrics/histogram.cc
+===================================================================
+--- a/base/metrics/histogram.cc
++++ b/base/metrics/histogram.cc
+@@ -337,17 +337,17 @@ std::unique_ptr<HistogramBase> Histogram
+ void Histogram::InitializeBucketRanges(Sample minimum,
+                                        Sample maximum,
+                                        BucketRanges* ranges) {
+-  double log_max = log(static_cast<double>(maximum));
+-  double log_ratio;
+-  double log_next;
++  double_t log_max = log(static_cast<double_t>(maximum));
++  double_t log_ratio;
++  double_t log_next;
+   size_t bucket_index = 1;
+   Sample current = minimum;
+   ranges->set_range(bucket_index, current);
+   size_t bucket_count = ranges->bucket_count();
+ 
+   while (bucket_count > ++bucket_index) {
+-    double log_current;
+-    log_current = log(static_cast<double>(current));
++    double_t log_current;
++    log_current = log(static_cast<double_t>(current));
+     debug::Alias(&log_current);
+     // Calculate the count'th root of the range.
+     log_ratio = (log_max - log_current) / (bucket_count - bucket_index);
+@@ -834,12 +834,12 @@ const std::string LinearHistogram::GetAs
+ void LinearHistogram::InitializeBucketRanges(Sample minimum,
+                                              Sample maximum,
+                                              BucketRanges* ranges) {
+-  double min = minimum;
+-  double max = maximum;
++  double_t min = minimum;
++  double_t max = maximum;
+   size_t bucket_count = ranges->bucket_count();
+ 
+   for (size_t i = 1; i < bucket_count; ++i) {
+-    double linear_range =
++    double_t linear_range =
+         (min * (bucket_count - 1 - i) + max * (i - 1)) / (bucket_count - 2);
+     uint32_t range = static_cast<Sample>(linear_range + 0.5);
+     ranges->set_range(i, range);

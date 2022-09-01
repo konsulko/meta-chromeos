@@ -1,0 +1,89 @@
+From 800078b4eecadb11f08250bcfc2008a1ce7c41a2 Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 25 Jul 2022 12:22:59 -0700
+Subject: [PATCH] libchrome: base/metrics/sample_vector static_cast
+
+Use double_t for more portable code.
+Use static_cast to convert integers to float point
+
+Avoids errors/warnings like:
+
+error: implicit conversion from 'base::Count' (aka 'int') to 'float' may
+lose p
+recision [-Werror,-Wimplicit-int-float-conversion]
+|     double mean = static_cast<float>(sum()) / sample_count;
+|                                             ~ ^~~~~~~~~~~~
+|
+error: implicit conversion from 'long' to 'double' may lose precision
+[-Werror,
+-Wimplicit-int-float-conversion]
+|   double scaled_sum = (past + current + remaining) / 100.0;
+|                        ~~~~~~~~~~~~~~~^~~~~~~~~~~  ~
+|
+error: implicit conversion from 'int64_t' (aka 'long') to 'double' may
+lose pre
+cision [-Werror,-Wimplicit-int-float-conversion]
+|     double percentage = past / scaled_sum;
+|                         ^~~~ ~
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+Change-Id: I35fc9708871e28d5aae167751514dc782ae86141
+---
+ base/metrics/sample_vector.cc | 12 ++++++------
+ base/metrics/sample_vector.h  |  1 +
+ 2 files changed, 7 insertions(+), 6 deletions(-)
+
+Index: b/base/metrics/sample_vector.cc
+===================================================================
+--- a/base/metrics/sample_vector.cc
++++ b/base/metrics/sample_vector.cc
+@@ -324,7 +324,7 @@ std::string SampleVector::GetAsciiHeader
+   if (sample_count == 0) {
+     DCHECK_EQ(sum(), 0);
+   } else {
+-    double mean = static_cast<float>(sum()) / sample_count;
++    double_t mean = static_cast<float>(sum()) / static_cast<float>(sample_count);
+     StringAppendF(&output, ", mean = %.1f", mean);
+   }
+   if (flags)
+@@ -336,12 +336,12 @@ std::string SampleVector::GetAsciiBody()
+   Count sample_count = TotalCount();
+ 
+   // Prepare to normalize graphical rendering of bucket contents.
+-  double max_size = 0;
+-  double scaling_factor = 1;
++  double_t max_size = 0;
++  double_t scaling_factor = 1;
+   max_size = GetPeakBucketSize();
+   // Scale histogram bucket counts to take at most 72 characters.
+   // Note: Keep in sync w/ kLineLength histogram_samples.cc
+-  const double kLineLength = 72;
++  const double_t kLineLength = 72;
+   if (max_size > kLineLength)
+     scaling_factor = kLineLength / max_size;
+ 
+@@ -408,10 +408,10 @@ void SampleVector::WriteAsciiBucketConte
+                                            int64_t remaining,
+                                            uint32_t current_bucket_index,
+                                            std::string* output) const {
+-  double scaled_sum = (past + current + remaining) / 100.0;
++  double_t scaled_sum = static_cast<double_t>(past + current + remaining) / 100.0;
+   WriteAsciiBucketValue(current, scaled_sum, output);
+   if (0 < current_bucket_index) {
+-    double percentage = past / scaled_sum;
++    double_t percentage = static_cast<double_t>(past) / scaled_sum;
+     StringAppendF(output, " {%3.1f%%}", percentage);
+   }
+ }
+Index: b/base/metrics/sample_vector.h
+===================================================================
+--- a/base/metrics/sample_vector.h
++++ b/base/metrics/sample_vector.h
+@@ -10,6 +10,7 @@
+ 
+ #include <stddef.h>
+ #include <stdint.h>
++#include <math.h>
+ 
+ #include <atomic>
+ #include <memory>
