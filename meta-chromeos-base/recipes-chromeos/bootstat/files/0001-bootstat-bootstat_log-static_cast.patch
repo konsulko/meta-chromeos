@@ -1,0 +1,13 @@
+Index: bootstat/bootstat_log.cc
+===================================================================
+--- bootstat.orig/bootstat_log.cc
++++ bootstat/bootstat_log.cc
+@@ -138,7 +138,7 @@ std::optional<struct BootStat::RtcTick>
+ 
+     // Timeout after 1.5 seconds.
+     if (difftime(tps_cur->tv_sec, tps_start->tv_sec) +
+-            (tps_cur->tv_nsec - tps_start->tv_nsec) * 1e-9 >
++            static_cast<double>(tps_cur->tv_nsec - tps_start->tv_nsec) * 1e-9 >
+         1.5) {
+       LOG(ERROR) << "Timeout waiting for RTC tick.";
+       return std::nullopt;
