@@ -1,0 +1,46 @@
+From 3bde48ea23be266ac2c397bb8467eee4dcf33e1e Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Mon, 29 Aug 2022 18:19:51 -0700
+Subject: [PATCH] keyutils-1.6.1: fix private keyword usage
+
+Change private to private_key to avoid keyword error.
+
+Upstream-Status: Pending
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+---
+ keyutils.c | 4 ++--
+ keyutils.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/keyutils.c b/keyutils.c
+index 9c37256..69477c1 100644
+--- a/keyutils.c
++++ b/keyutils.c
+@@ -244,11 +244,11 @@ long keyctl_dh_compute(key_serial_t priv, key_serial_t prime,
+ 	return keyctl(KEYCTL_DH_COMPUTE, &params, buffer, buflen, 0);
+ }
+ 
+-long keyctl_dh_compute_kdf(key_serial_t private, key_serial_t prime,
++long keyctl_dh_compute_kdf(key_serial_t private_key, key_serial_t prime,
+ 			   key_serial_t base, char *hashname, char *otherinfo,
+ 			   size_t otherinfolen, char *buffer, size_t buflen)
+ {
+-	struct keyctl_dh_params params = { .priv = private,
++	struct keyctl_dh_params params = { .priv = private_key,
+ 					   .prime = prime,
+ 					   .base = base };
+ 	struct keyctl_kdf_params kdfparams = { .hashname = hashname,
+diff --git a/keyutils.h b/keyutils.h
+index 887cbf2..3a40061 100644
+--- a/keyutils.h
++++ b/keyutils.h
+@@ -218,7 +218,7 @@ extern long keyctl_invalidate(key_serial_t id);
+ extern long keyctl_get_persistent(uid_t uid, key_serial_t id);
+ extern long keyctl_dh_compute(key_serial_t priv, key_serial_t prime,
+ 			      key_serial_t base, char *buffer, size_t buflen);
+-extern long keyctl_dh_compute_kdf(key_serial_t private, key_serial_t prime,
++extern long keyctl_dh_compute_kdf(key_serial_t private_key, key_serial_t prime,
+ 				  key_serial_t base, char *hashname,
+ 				  char *otherinfo, size_t otherinfolen,
+ 				  char *buffer, size_t buflen);
