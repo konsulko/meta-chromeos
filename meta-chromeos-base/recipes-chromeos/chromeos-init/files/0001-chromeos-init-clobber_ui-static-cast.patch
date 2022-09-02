@@ -1,0 +1,13 @@
+Index: init/clobber_ui.cc
+===================================================================
+--- init.orig/clobber_ui.cc
++++ init/clobber_ui.cc
+@@ -184,7 +184,7 @@ void ClobberUi::ThreadMain() {
+   while (state_.running) {
+     base::TimeDelta elapsed = base::TimeTicks::Now() - start_time;
+     double progress =
+-        static_cast<double>(state_.total_bytes_written) / state_.bytes_to_write;
++        static_cast<double>(state_.total_bytes_written) / static_cast<double>(state_.bytes_to_write);
+ 
+     int terminal_width = 0;
+     if (show_progress_bar && !GetTerminalWidth(terminal_, &terminal_width)) {
