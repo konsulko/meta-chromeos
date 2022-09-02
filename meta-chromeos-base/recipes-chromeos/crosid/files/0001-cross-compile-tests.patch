@@ -1,0 +1,11 @@
+Index: crosid/meson.build
+===================================================================
+--- crosid.orig/meson.build
++++ crosid/meson.build
+@@ -52,5 +52,5 @@ executable(
+     src_files,
+     c_args: coverage_flags,
+     link_args: coverage_flags,
+-    native: true,
++    native: false,
+ )
