@@ -1,0 +1,36 @@
+From 1ab2cd9a0a61a7469fbf9cbf624e5d9e795cb36c Mon Sep 17 00:00:00 2001
+From: Tim Orling <tim.orling@konsulko.com>
+Date: Thu, 25 Aug 2022 15:54:56 -0700
+Subject: [PATCH] Link liblvm2cmd with libdevmapper-event
+
+Explicitly add $(DMEVENT_LIBS) to liblvm2cmd target to fix linker errors
+like:
+recipe-sysroot/usr/lib/liblvm2cmd.so.2.03: undefined reference to
+`dm_event_unregister_handler`
+
+See also:
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=921817
+
+Upstream-Status: Pending
+
+Signed-off-by: Tim Orling <tim.orling@konsulko.com>
+---
+ tools/Makefile.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/Makefile.in b/tools/Makefile.in
+index 11160e655..d1af21362 100644
+--- a/tools/Makefile.in
++++ b/tools/Makefile.in
+@@ -154,7 +154,7 @@ liblvm2cmd.$(LIB_SUFFIX): liblvm2cmd.a $(LDDEPS)
+ 	$(Q) $(CC) -shared -Wl,-soname,$@.$(LIB_VERSION) \
+ 		$(CFLAGS) $(CLDFLAGS) -o $@ \
+ 		@CLDWHOLEARCHIVE@ liblvm2cmd.a @CLDNOWHOLEARCHIVE@ \
+-		$(LVMINTERNAL_LIBS) $(LVMLIBS)
++		$(LVMINTERNAL_LIBS) $(DMEVENT_LIBS) $(LVMLIBS)
+ 
+ liblvm2cmd.$(LIB_SUFFIX).$(LIB_VERSION): liblvm2cmd.$(LIB_SUFFIX)
+ 	@echo "    [LN] $@"
+-- 
+2.34.1
+
