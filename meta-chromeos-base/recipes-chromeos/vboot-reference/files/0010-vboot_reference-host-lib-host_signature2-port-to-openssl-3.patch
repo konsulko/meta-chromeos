@@ -1,0 +1,66 @@
+Index: vboot_reference/host/lib/host_signature2.c
+===================================================================
+--- vboot_reference.orig/host/lib/host_signature2.c
++++ vboot_reference/host/lib/host_signature2.c
+@@ -5,6 +5,7 @@
+  * Host functions for signature generation.
+  */
+ 
++#include <openssl/evp.h>
+ #include <openssl/rsa.h>
+ 
+ #include <stdio.h>
+@@ -83,11 +84,14 @@ struct vb2_signature *vb2_calculate_sign
+ 		const uint8_t *data, uint32_t size,
+ 		const struct vb2_private_key *key)
+ {
++	EVP_PKEY_CTX *ctx;
++
+ 	uint8_t digest[VB2_MAX_DIGEST_SIZE];
+ 	uint32_t digest_size = vb2_digest_size(key->hash_alg);
+ 
+ 	uint32_t digest_info_size = 0;
+ 	const uint8_t *digest_info = NULL;
++
+ 	if (VB2_SUCCESS != vb2_digest_info(key->hash_alg,
+ 					   &digest_info, &digest_info_size))
+ 		return NULL;
+@@ -115,16 +119,28 @@ struct vb2_signature *vb2_calculate_sign
+ 	}
+ 
+ 	/* Sign the signature_digest into our output buffer */
+-	int rv = RSA_private_encrypt(signature_digest_len,    /* Input length */
+-				     signature_digest,        /* Input data */
+-				     vb2_signature_data_mutable(sig),  /* Output sig */
+-				     key->rsa_private_key,    /* Key to use */
+-				     RSA_PKCS1_PADDING);      /* Padding */
+-	free(signature_digest);
+-
+-	if (-1 == rv) {
+-		fprintf(stderr, "%s: RSA_private_encrypt() failed\n", __func__);
+-		free(sig);
++	ctx = EVP_PKEY_CTX_new(
++	    key->rsa_private_key, /* Key to use */
++	    NULL /* no engine */);
++	if (ctx) {
++	    EVP_PKEY_sign_init(ctx);
++	    EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING);
++		int rv = EVP_PKEY_sign(
++					ctx, /* Context */
++					vb2_signature_data_mutable(sig), /* Output signature. */
++					(size_t*)&size, /* Output length. */
++					signature_digest,  /* Input data. */
++					signature_digest_len /* Input length. */
++				);
++		free(signature_digest);
++
++		if (rv <= 0) {
++			fprintf(stderr, "%s: EVP_PKEY_sign() failed\n", __func__);
++			free(sig);
++			return NULL;
++		}
++	} else {
++		fprintf(stderr, "%s: EVP_PKEY_CTX_new() failed\n", __func__);
+ 		return NULL;
+ 	}
+ 

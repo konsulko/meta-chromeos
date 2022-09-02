@@ -1,0 +1,63 @@
+Index: vboot_reference/host/lib/signature_digest.c
+===================================================================
+--- vboot_reference.orig/host/lib/signature_digest.c
++++ vboot_reference/host/lib/signature_digest.c
+@@ -61,8 +61,10 @@ uint8_t* SignatureBuf(const uint8_t* buf
+ {
+ 	const enum vb2_hash_algorithm hash_alg = vb2_crypto_to_hash(algorithm);
+ 	FILE* key_fp = NULL;
+-	RSA* key = NULL;
++	EVP_PKEY_CTX *ctx;
++	EVP_PKEY* key = NULL;
+ 	uint8_t* signature = NULL;
++	size_t signature_len;
+ 	uint8_t* signature_digest = SignatureDigest(buf, len, algorithm);
+ 	if (!signature_digest) {
+ 		fprintf(stderr, "SignatureBuf(): "
+@@ -90,25 +92,34 @@ uint8_t* SignatureBuf(const uint8_t* buf
+ 		free(signature_digest);
+ 		return NULL;
+ 	}
+-	if ((key = PEM_read_RSAPrivateKey(key_fp, NULL, NULL, NULL)))
+-		signature = (uint8_t *)malloc(
+-		    vb2_rsa_sig_size(vb2_crypto_to_signature(algorithm)));
+-	else
++	if ((key = PEM_read_PrivateKey(key_fp, NULL, NULL, NULL))) {
++		signature_len = vb2_rsa_sig_size(vb2_crypto_to_signature(algorithm));
++		signature = (uint8_t *)malloc(signature_len);
++	} else {
+ 		fprintf(stderr, "SignatureBuf(): "
+ 			"Couldn't read private key from: %s\n", key_file);
++	}
+ 	if (signature) {
+-		if (-1 == RSA_private_encrypt(
+-				signature_digest_len,  /* Input length. */
++		ctx = EVP_PKEY_CTX_new(
++			key, /* Key to use. */
++			NULL /* no engine */);
++		if (ctx) {
++			EVP_PKEY_sign_init(ctx);
++			EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING);
++			if (EVP_PKEY_sign(
++				ctx, /* Context */
++				signature, /* Output signature. */
++				&signature_len, /* Output length. */
+ 				signature_digest,  /* Input data. */
+-				signature,  /* Output signature. */
+-				key,  /* Key to use. */
+-				RSA_PKCS1_PADDING))  /* Padding to use. */
+-			fprintf(stderr, "SignatureBuf(): "
+-				"RSA_private_encrypt() failed.\n");
++				signature_digest_len /* Input length. */
++				) <= 0)
++				fprintf(stderr, "SignatureBuf(): "
++					"EVP_PKEY_sign() failed.\n");
++		}
+ 	}
+ 	fclose(key_fp);
+ 	if (key)
+-		RSA_free(key);
++		EVP_PKEY_free(key);
+ 	free(signature_digest);
+ 	return signature;
+ }

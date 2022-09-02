@@ -1,0 +1,49 @@
+Index: vboot_reference/host/lib/host_key2.c
+===================================================================
+--- vboot_reference.orig/host/lib/host_key2.c
++++ vboot_reference/host/lib/host_key2.c
+@@ -58,7 +58,7 @@ struct vb2_private_key *vb2_read_private
+ 	const unsigned char *start = buf + sizeof(alg);
+ 
+ 	key->rsa_private_key =
+-		d2i_RSAPrivateKey(0, &start, bufsize - sizeof(alg));
++		d2i_PrivateKey(EVP_PKEY_RSA, 0, &start, bufsize - sizeof(alg));
+ 
+ 	if (!key->rsa_private_key) {
+ 		VB2_DEBUG("Unable to parse RSA private key\n");
+@@ -88,7 +88,7 @@ struct vb2_private_key *vb2_read_private
+ 			  __FUNCTION__, filename);
+ 		return NULL;
+ 	}
+-	struct rsa_st *rsa_key = PEM_read_RSAPrivateKey(f, NULL, NULL, NULL);
++	struct evp_pkey_st *rsa_key = PEM_read_PrivateKey(f, NULL, NULL, NULL);
+ 	fclose(f);
+ 	if (!rsa_key) {
+ 		VB2_DEBUG("%s(): Couldn't read private key from file: %s\n",
+@@ -100,7 +100,7 @@ struct vb2_private_key *vb2_read_private
+ 	struct vb2_private_key *key =
+ 		(struct vb2_private_key *)calloc(sizeof(*key), 1);
+ 	if (!key) {
+-		RSA_free(rsa_key);
++		EVP_PKEY_free(rsa_key);
+ 		return NULL;
+ 	}
+ 	key->rsa_private_key = rsa_key;
+@@ -116,7 +116,7 @@ void vb2_free_private_key(struct vb2_pri
+ 	if (!key)
+ 		return;
+ 	if (key->rsa_private_key)
+-		RSA_free(key->rsa_private_key);
++		EVP_PKEY_free(key->rsa_private_key);
+ 	free(key);
+ }
+ 
+@@ -131,7 +131,7 @@ vb2_error_t vb2_write_private_key(const
+ 	}
+ 
+ 	uint8_t *outbuf = NULL;
+-	int buflen = i2d_RSAPrivateKey(key->rsa_private_key, &outbuf);
++	int buflen = i2d_PrivateKey(key->rsa_private_key, &outbuf);
+ 	if (buflen <= 0) {
+ 		fprintf(stderr, "Unable to write private key buffer\n");
+ 		return VB2_ERROR_PRIVATE_KEY_WRITE_RSA;

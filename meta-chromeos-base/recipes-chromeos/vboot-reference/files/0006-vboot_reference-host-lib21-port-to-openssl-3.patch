@@ -1,0 +1,143 @@
+Index: vboot_reference/host/lib21/include/host_key21.h
+===================================================================
+--- vboot_reference.orig/host/lib21/include/host_key21.h
++++ vboot_reference/host/lib21/include/host_key21.h
+@@ -17,7 +17,7 @@ struct vb21_packed_key;
+ 
+ /* Private key data, in-memory format for use in signing calls. */
+ struct vb2_private_key {
+-	struct rsa_st *rsa_private_key;		/* Private key data */
++	struct evp_pkey_st *rsa_private_key;	/* Private key data */
+ 	enum vb2_hash_algorithm hash_alg;	/* Hash algorithm */
+ 	enum vb2_signature_algorithm sig_alg;	/* Signature algorithm */
+ 	char *desc;				/* Description */
+@@ -201,10 +201,10 @@ vb2_error_t vb2_public_key_hash(struct v
+ /**
+  * Return the signature algorithm implied by the bit length of an RSA key
+  *
+- * @param rsa		RSA key
++ * @param rsa		EVP_PKEY key
+  * @return vb2 signature algorithm
+  */
+-enum vb2_signature_algorithm vb2_rsa_sig_alg(struct rsa_st *rsa);
++enum vb2_signature_algorithm vb2_rsa_sig_alg(struct evp_pkey_st *rsa);
+ 
+ /**
+  * Write a public key to the vb21_packed_key format.
+Index: vboot_reference/host/lib21/host_key.c
+===================================================================
+--- vboot_reference.orig/host/lib21/host_key.c
++++ vboot_reference/host/lib21/host_key.c
+@@ -7,6 +7,7 @@
+ 
+ #include <stdio.h>
+ 
++#include <openssl/core_names.h>
+ #include <openssl/pem.h>
+ 
+ #include "2common.h"
+@@ -25,7 +26,7 @@ void vb2_private_key_free(struct vb2_pri
+ 		return;
+ 
+ 	if (key->rsa_private_key)
+-		RSA_free(key->rsa_private_key);
++		EVP_PKEY_free(key->rsa_private_key);
+ 
+ 	if (key->desc)
+ 		free(key->desc);
+@@ -87,7 +88,7 @@ vb2_error_t vb21_private_key_unpack(stru
+ 		}
+ 	} else {
+ 		start = (const unsigned char *)(buf + pkey->key_offset);
+-		key->rsa_private_key = d2i_RSAPrivateKey(0, &start,
++		key->rsa_private_key = d2i_PrivateKey(EVP_PKEY_RSA, 0, &start,
+ 							 pkey->key_size);
+ 		if (!key->rsa_private_key) {
+ 			free(key);
+@@ -148,7 +149,7 @@ vb2_error_t vb2_private_key_read_pem(str
+ 		return VB2_ERROR_READ_PEM_FILE_OPEN;
+ 	}
+ 
+-	key->rsa_private_key = PEM_read_RSAPrivateKey(f, NULL, NULL, NULL);
++	key->rsa_private_key = PEM_read_PrivateKey(f, NULL, NULL, NULL);
+ 	fclose(f);
+ 
+ 	if (!key->rsa_private_key) {
+@@ -200,7 +201,7 @@ vb2_error_t vb21_private_key_write(const
+ 
+ 	if (key->sig_alg != VB2_SIG_NONE) {
+ 		/* Pack RSA key */
+-		rsalen = i2d_RSAPrivateKey(key->rsa_private_key, &rsabuf);
++		rsalen = i2d_PrivateKey(key->rsa_private_key, &rsabuf);
+ 		if (rsalen <= 0 || !rsabuf)
+ 			return VB2_ERROR_PRIVATE_KEY_WRITE_RSA;
+ 	}
+@@ -496,12 +497,13 @@ vb2_error_t vb2_public_key_hash(struct v
+ 	return VB2_SUCCESS;
+ }
+ 
+-enum vb2_signature_algorithm vb2_rsa_sig_alg(struct rsa_st *rsa)
++enum vb2_signature_algorithm vb2_rsa_sig_alg(struct evp_pkey_st *rsa)
+ {
+-	const BIGNUM *e, *n;
++	BIGNUM *e, *n;
+ 	int exp, bits;
+ 
+-	RSA_get0_key(rsa, &n, &e, NULL);
++	EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_N, &n);
++	EVP_PKEY_get_bn_param(rsa, OSSL_PKEY_PARAM_RSA_E, &e);
+ 	exp = BN_get_word(e);
+ 	bits = BN_num_bits(n);
+ 
+Index: vboot_reference/host/lib21/host_signature.c
+===================================================================
+--- vboot_reference.orig/host/lib21/host_signature.c
++++ vboot_reference/host/lib21/host_signature.c
+@@ -5,6 +5,7 @@
+  * Host functions for signatures.
+  */
+ 
++#include <openssl/evp.h>
+ #include <openssl/rsa.h>
+ 
+ #include "2common.h"
+@@ -89,6 +90,7 @@ vb2_error_t vb21_sign_data(struct vb21_s
+ 	uint32_t sig_digest_size;
+ 	uint8_t *sig_digest;
+ 	uint8_t *buf;
++	EVP_PKEY_CTX *ctx;
+ 
+ 	*sig_ptr = NULL;
+ 
+@@ -153,14 +155,23 @@ vb2_error_t vb21_sign_data(struct vb21_s
+ 		memcpy(buf + s.sig_offset, sig_digest, sig_digest_size);
+ 	} else {
+ 		/* RSA-encrypt the signature */
+-		if (RSA_private_encrypt(sig_digest_size,
+-					sig_digest,
+-					buf + s.sig_offset,
+-					key->rsa_private_key,
+-					RSA_PKCS1_PADDING) == -1) {
+-			free(sig_digest);
+-			free(buf);
+-			return VB2_SIGN_DATA_RSA_ENCRYPT;
++		ctx = EVP_PKEY_CTX_new(
++			key->rsa_private_key, /* Key to use */
++			NULL /* no engine */);
++		if (ctx) {
++			EVP_PKEY_sign_init(ctx);
++			EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING);
++			if (EVP_PKEY_sign(
++				ctx, /* Context */
++				buf + s.sig_offset, /* Output signature. */
++				(size_t*)&s.sig_size, /* Output length */
++				sig_digest, /* Input data. */
++				sig_digest_size /* Input length. */
++				) <= 0) {
++				free(sig_digest);
++				free(buf);
++				return VB2_SIGN_DATA_RSA_ENCRYPT;
++			}
+ 		}
+ 	}
+ 

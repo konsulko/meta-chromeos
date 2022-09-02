@@ -1,0 +1,95 @@
+Index: vboot_reference/futility/vb2_helper.c
+===================================================================
+--- vboot_reference.orig/futility/vb2_helper.c
++++ vboot_reference/futility/vb2_helper.c
+@@ -3,6 +3,7 @@
+  * found in the LICENSE file.
+  */
+ 
++#include <openssl/core_names.h>
+ #include <openssl/pem.h>
+ 
+ #include "2common.h"
+@@ -161,20 +162,20 @@ done:
+ 	return rv;
+ }
+ 
+-static RSA *rsa_from_buffer(uint8_t *buf, uint32_t len)
++static EVP_PKEY *rsa_from_buffer(uint8_t *buf, uint32_t len)
+ {
+ 	BIO *bp;
+-	RSA *rsa_key;
++	EVP_PKEY *rsa_key;
+ 
+ 	bp = BIO_new_mem_buf(buf, len);
+ 	if (!bp)
+ 		return 0;
+ 
+-	rsa_key = PEM_read_bio_RSAPrivateKey(bp, NULL, NULL, NULL);
++	rsa_key = PEM_read_bio_PrivateKey(bp, NULL, NULL, NULL);
+ 	if (!rsa_key) {
+ 		if (BIO_reset(bp) < 0)
+ 			return 0;
+-		rsa_key = PEM_read_bio_RSA_PUBKEY(bp, NULL, NULL, NULL);
++		rsa_key = PEM_read_bio_PUBKEY(bp, NULL, NULL, NULL);
+ 	}
+ 	if (!rsa_key) {
+ 		BIO_free(bp);
+@@ -188,10 +189,10 @@ static RSA *rsa_from_buffer(uint8_t *buf
+ 
+ enum futil_file_type ft_recognize_pem(uint8_t *buf, uint32_t len)
+ {
+-	RSA *rsa_key = rsa_from_buffer(buf, len);
++	EVP_PKEY *rsa_key = rsa_from_buffer(buf, len);
+ 
+ 	if (rsa_key) {
+-		RSA_free(rsa_key);
++		EVP_PKEY_free(rsa_key);
+ 		return FILE_TYPE_PEM;
+ 	}
+ 
+@@ -200,12 +201,12 @@ enum futil_file_type ft_recognize_pem(ui
+ 
+ int ft_show_pem(const char *name, void *data)
+ {
+-	RSA *rsa_key;
++	EVP_PKEY *rsa_key;
+ 	uint8_t *keyb;
+ 	uint8_t digest[VB2_SHA1_DIGEST_SIZE];
+ 	uint32_t keyb_len;
+ 	int i, bits;
+-	const BIGNUM *rsa_key_n, *rsa_key_d;
++	BIGNUM *rsa_key_n, *rsa_key_d;
+ 	int fd = -1;
+ 	uint8_t *buf;
+ 	uint32_t len;
+@@ -219,8 +220,9 @@ int ft_show_pem(const char *name, void *
+ 	if (!rsa_key)
+ 		FATAL("No RSA key found in buffer\n");
+ 
+-	/* Use to presence of the private exponent to decide if it's public */
+-	RSA_get0_key(rsa_key, &rsa_key_n, NULL, &rsa_key_d);
++	/* Use the presence of the private exponent to decide if it's public */
++	EVP_PKEY_get_bn_param(rsa_key, OSSL_PKEY_PARAM_RSA_D, &rsa_key_d);
++	EVP_PKEY_get_bn_param(rsa_key, OSSL_PKEY_PARAM_RSA_N, &rsa_key_n);
+ 	printf("%s Key file:      %s\n", rsa_key_d ? "Private" : "Public",
+ 					 name);
+ 
+@@ -229,7 +231,7 @@ int ft_show_pem(const char *name, void *
+ 
+ 	if (vb_keyb_from_rsa(rsa_key, &keyb, &keyb_len)) {
+ 		printf("  Key sha1sum:         <error>");
+-		RSA_free(rsa_key);
++		EVP_PKEY_free(rsa_key);
+ 		rv = 1;
+ 		goto done;
+ 	}
+@@ -242,7 +244,7 @@ int ft_show_pem(const char *name, void *
+ 	printf("\n");
+ 
+ 	free(keyb);
+-	RSA_free(rsa_key);
++	EVP_PKEY_free(rsa_key);
+ done:
+ 	futil_unmap_and_close_file(fd, FILE_RO, buf, len);
+ 	return rv;

@@ -1,0 +1,91 @@
+Index: vboot_reference/futility/cmd_create.c
+===================================================================
+--- vboot_reference.orig/futility/cmd_create.c
++++ vboot_reference/futility/cmd_create.c
+@@ -3,6 +3,7 @@
+  * found in the LICENSE file.
+  */
+ 
++#include <openssl/core_names.h>
+ #include <openssl/pem.h>
+ 
+ #include <getopt.h>
+@@ -85,7 +86,7 @@ static int vb1_make_keypair(void)
+ {
+ 	struct vb2_private_key *privkey = NULL;
+ 	struct vb2_packed_key *pubkey = NULL;
+-	struct rsa_st *rsa_key = NULL;
++	struct evp_pkey_st *rsa_key = NULL;
+ 	uint8_t *keyb_data = 0;
+ 	uint32_t keyb_size;
+ 	int ret = 1;
+@@ -98,7 +99,7 @@ static int vb1_make_keypair(void)
+ 
+ 	/* TODO: this is very similar to vb2_read_private_key_pem() */
+ 
+-	rsa_key = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
++	rsa_key = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
+ 	fclose(fp);
+ 	if (!rsa_key) {
+ 		fprintf(stderr, "Unable to read RSA key from %s\n", infile);
+@@ -158,7 +159,7 @@ done:
+ 	free(privkey);
+ 	free(pubkey);
+ 	free(keyb_data);
+-	RSA_free(rsa_key);
++	EVP_PKEY_free(rsa_key);
+ 	return ret;
+ }
+ 
+@@ -166,13 +167,13 @@ static int vb2_make_keypair(void)
+ {
+ 	struct vb2_private_key *privkey = 0;
+ 	struct vb2_public_key *pubkey = 0;
+-	RSA *rsa_key = 0;
++	EVP_PKEY *rsa_key = 0;
+ 	uint8_t *keyb_data = 0;
+ 	uint32_t keyb_size;
+ 	enum vb2_signature_algorithm sig_alg;
+ 	uint8_t *pubkey_buf = 0;
+ 	int has_priv = 0;
+-	const BIGNUM *rsa_d;
++	BIGNUM *rsa_d;
+ 
+ 	FILE *fp;
+ 	int ret = 1;
+@@ -183,7 +184,7 @@ static int vb2_make_keypair(void)
+ 		goto done;
+ 	}
+ 
+-	rsa_key = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
++	rsa_key = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
+ 
+ 	if (!rsa_key) {
+ 		/* Check if the PEM contains only a public key */
+@@ -191,7 +192,7 @@ static int vb2_make_keypair(void)
+ 			fprintf(stderr, "Error seeking in %s\n", infile);
+ 			goto done;
+ 		}
+-		rsa_key = PEM_read_RSA_PUBKEY(fp, NULL, NULL, NULL);
++		rsa_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
+ 	}
+ 	fclose(fp);
+ 	if (!rsa_key) {
+@@ -199,7 +200,7 @@ static int vb2_make_keypair(void)
+ 		goto done;
+ 	}
+ 	/* Public keys doesn't have the private exponent */
+-	RSA_get0_key(rsa_key, NULL, NULL, &rsa_d);
++	EVP_PKEY_get_bn_param(rsa_key, OSSL_PKEY_PARAM_RSA_D, &rsa_d);
+ 	has_priv = !!rsa_d;
+ 	if (!has_priv)
+ 		fprintf(stderr, "%s has a public key only.\n", infile);
+@@ -289,7 +290,7 @@ static int vb2_make_keypair(void)
+ 	ret = 0;
+ 
+ done:
+-	RSA_free(rsa_key);
++	EVP_PKEY_free(rsa_key);
+ 	if (privkey)				/* prevent double-free */
+ 		privkey->rsa_private_key = 0;
+ 	vb2_private_key_free(privkey);

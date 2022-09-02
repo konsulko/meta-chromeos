@@ -1,0 +1,80 @@
+Index: vboot_reference/host/lib/include/util_misc.h
+===================================================================
+--- vboot_reference.orig/host/lib/include/util_misc.h
++++ vboot_reference/host/lib/include/util_misc.h
+@@ -11,7 +11,7 @@
+ #include "host_key.h"
+ #include "vboot_struct.h"
+ 
+-struct rsa_st;
++struct evp_pkey_st;
+ struct vb2_packed_key;
+ struct vb2_private_key;
+ 
+@@ -56,13 +56,15 @@ const char *private_key_sha1_string(cons
+  * This function allocates and extracts that binary structure directly
+  * from the RSA private key, rather than from a file.
+  *
+- * @param rsa_private_key     RSA private key (duh)
++ * RSA type deprecated in OpenSSL 3.0, use EVP_PKEY
++ *
++ * @param rsa_private_key     EVP_PKEY private key (duh)
+  * @param keyb_data	      Pointer to newly allocated binary blob
+  * @param keyb_size	      Size of newly allocated binary blob
+  *
+  * @return 0 on success, non-zero if unable to allocate enough memory.
+  */
+-int vb_keyb_from_rsa(struct rsa_st *rsa_private_key,
++int vb_keyb_from_rsa(struct evp_pkey_st *rsa_private_key,
+ 		     uint8_t **keyb_data, uint32_t *keyb_size);
+ 
+ #endif  /* VBOOT_REFERENCE_UTIL_MISC_H_ */
+Index: vboot_reference/host/lib/util_misc.c
+===================================================================
+--- vboot_reference.orig/host/lib/util_misc.c
++++ vboot_reference/host/lib/util_misc.c
+@@ -6,6 +6,8 @@
+  */
+ 
+ #include <openssl/bn.h>
++#include <openssl/core_names.h>
++#include <openssl/evp.h>
+ #include <openssl/rsa.h>
+ 
+ #include <stdio.h>
+@@ -61,7 +63,7 @@ const char *private_key_sha1_string(cons
+ 	return dest;
+ }
+ 
+-int vb_keyb_from_rsa(struct rsa_st *rsa_private_key,
++int vb_keyb_from_rsa(struct evp_pkey_st *rsa_private_key,
+ 		     uint8_t **keyb_data, uint32_t *keyb_size)
+ {
+ 	uint32_t i, nwords;
+@@ -71,7 +73,7 @@ int vb_keyb_from_rsa(struct rsa_st *rsa_
+ 	BIGNUM *N0inv = NULL, *R = NULL, *RR = NULL;
+ 	BIGNUM *RRTemp = NULL, *NnumBits = NULL;
+ 	BIGNUM *n = NULL, *rr = NULL;
+-	const BIGNUM *rsa_private_key_n;
++	BIGNUM *rsa_private_key_n;
+ 	BN_CTX *bn_ctx = BN_CTX_new();
+ 	uint32_t n0invout;
+ 	uint32_t bufsize;
+@@ -79,7 +81,7 @@ int vb_keyb_from_rsa(struct rsa_st *rsa_
+ 	int retval = 1;
+ 
+ 	/* Size of RSA key in 32-bit words */
+-	nwords = RSA_size(rsa_private_key) / 4;
++	nwords = EVP_PKEY_size(rsa_private_key) / 4;
+ 
+ 	bufsize = (2 + nwords + nwords) * sizeof(uint32_t);
+ 	outbuf = malloc(bufsize);
+@@ -108,7 +110,7 @@ int vb_keyb_from_rsa(struct rsa_st *rsa_
+ 	NEW_BIGNUM(B);
+ #undef NEW_BIGNUM
+ 
+-	RSA_get0_key(rsa_private_key, &rsa_private_key_n, NULL, NULL);
++	EVP_PKEY_get_bn_param(rsa_private_key, OSSL_PKEY_PARAM_RSA_N, &rsa_private_key_n);
+ 	BN_copy(N, rsa_private_key_n);
+ 	BN_set_word(Big1, 1L);
+ 	BN_set_word(Big2, 2L);

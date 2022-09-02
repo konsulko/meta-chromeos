@@ -1,0 +1,29 @@
+Index: vboot_reference/futility/cmd_gscvd.c
+===================================================================
+--- vboot_reference.orig/futility/cmd_gscvd.c
++++ vboot_reference/futility/cmd_gscvd.c
+@@ -8,6 +8,7 @@
+ #include <fcntl.h>
+ #include <getopt.h>
+ #include <openssl/bn.h>
++#include <openssl/core_names.h>
+ #include <openssl/pem.h>
+ #include <stdbool.h>
+ #include <stdlib.h>
+@@ -693,14 +694,14 @@ static int validate_pubk_signature(const
+ static int validate_privk(struct vb2_keyblock *kblock,
+ 			  struct vb2_private_key *plat_privk)
+ {
+-	const BIGNUM *privn;
++	BIGNUM *privn;
+ 	BIGNUM *pubn;
+ 	struct vb2_public_key pubk;
+ 	int rv;
+ 
+ 	privn = pubn = NULL;
+ 
+-	RSA_get0_key(plat_privk->rsa_private_key, &privn, NULL, NULL);
++	EVP_PKEY_get_bn_param(plat_privk->rsa_private_key, OSSL_PKEY_PARAM_RSA_N, &privn);
+ 
+ 	if (vb2_unpack_key(&pubk, &kblock->data_key) != VB2_SUCCESS) {
+ 		ERROR("Failed to unpack public key\n");

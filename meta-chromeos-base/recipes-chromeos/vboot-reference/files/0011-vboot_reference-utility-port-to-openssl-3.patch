@@ -1,0 +1,96 @@
+Index: vboot_reference/utility/dumpRSAPublicKey.c
+===================================================================
+--- vboot_reference.orig/utility/dumpRSAPublicKey.c
++++ vboot_reference/utility/dumpRSAPublicKey.c
+@@ -8,6 +8,7 @@
+  * /tools/DumpPublicKey.java). Uses the OpenSSL X509 and BIGNUM library.
+  */
+ 
++#include <openssl/core_names.h>
+ #include <openssl/pem.h>
+ 
+ #include <stdint.h>
+@@ -21,11 +22,12 @@
+  * routines.
+  */
+ 
+-static int check(RSA* key) {
+-  const BIGNUM *n, *e;
++static int check(EVP_PKEY* key) {
++  BIGNUM *n, *e;
+   int public_exponent, modulus;
+ 
+-  RSA_get0_key(key, &n, &e, NULL);
++  EVP_PKEY_get_bn_param(key, OSSL_PKEY_PARAM_RSA_N, &n);
++  EVP_PKEY_get_bn_param(key, OSSL_PKEY_PARAM_RSA_E, &e);
+   public_exponent = BN_get_word(e);
+   modulus = BN_num_bits(n);
+ 
+@@ -45,9 +47,9 @@ static int check(RSA* key) {
+ 
+ /* Pre-processes and outputs RSA public key to standard out.
+  */
+-static void output(RSA* key) {
++static void output(EVP_PKEY* key) {
+   int i, nwords;
+-  const BIGNUM *key_n;
++  BIGNUM *key_n;
+   BIGNUM *N = NULL;
+   BIGNUM *Big1 = NULL, *Big2 = NULL, *Big32 = NULL, *BigMinus1 = NULL;
+   BIGNUM *B = NULL;
+@@ -57,13 +59,13 @@ static void output(RSA* key) {
+   uint32_t n0invout;
+ 
+   /* Output size of RSA key in 32-bit words */
+-  nwords = RSA_size(key) / 4;
++  nwords = EVP_PKEY_size(key) / 4;
+   if (-1 == write(1, &nwords, sizeof(nwords)))
+     goto failure;
+ 
+ 
+   /* Initialize BIGNUMs */
+-  RSA_get0_key(key, &key_n, NULL, NULL);
++  EVP_PKEY_get_bn_param(key, OSSL_PKEY_PARAM_RSA_N, &n);
+   N = BN_dup(key_n);
+   Big1 = BN_new();
+   Big2 = BN_new();
+@@ -147,8 +149,7 @@ int main(int argc, char* argv[]) {
+   int cert_mode = 0;
+   FILE* fp;
+   X509* cert = NULL;
+-  RSA* pubkey = NULL;
+-  EVP_PKEY* key;
++  EVP_PKEY* pubkey = NULL;
+   char *progname;
+ 
+   if (argc != 3 || (strcmp(argv[1], "-cert") && strcmp(argv[1], "-pub"))) {
+@@ -179,16 +180,17 @@ int main(int argc, char* argv[]) {
+     }
+ 
+     /* Get the public key from the certificate. */
+-    key = X509_get_pubkey(cert);
++    pubkey = X509_get_pubkey(cert);
+ 
+     /* Convert to a RSA_style key. */
+-    if (!(pubkey = EVP_PKEY_get1_RSA(key))) {
++    /* if (!(pubkey = EVP_PKEY_get1_RSA(key))) {
+       fprintf(stderr, "Couldn't convert to a RSA style key.\n");
+       goto fail;
+     }
++    */
+   } else {
+     /* Read the pubkey in .PEM format. */
+-    if (!(pubkey = PEM_read_RSA_PUBKEY(fp, NULL, NULL, NULL))) {
++    if (!(pubkey = PEM_read_PUBKEY(fp, NULL, NULL, NULL))) {
+       fprintf(stderr, "Couldn't read public key file.\n");
+       goto fail;
+     }
+@@ -200,7 +202,7 @@ int main(int argc, char* argv[]) {
+ 
+ fail:
+   X509_free(cert);
+-  RSA_free(pubkey);
++  EVP_PKEY_free(pubkey);
+   fclose(fp);
+ 
+   return 0;

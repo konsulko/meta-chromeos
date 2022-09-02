@@ -1,0 +1,21 @@
+Index: vboot_reference/futility/cmd_show.c
+===================================================================
+--- vboot_reference.orig/futility/cmd_show.c
++++ vboot_reference/futility/cmd_show.c
+@@ -3,6 +3,7 @@
+  * found in the LICENSE file.
+  */
+ 
++#include <openssl/evp.h>
+ #include <openssl/rsa.h>
+ 
+ #include <errno.h>
+@@ -131,7 +132,7 @@ int ft_show_privkey(const char *name, vo
+ 		goto done;
+ 	}
+ 	len -= sizeof(*pkey);
+-	key.rsa_private_key = d2i_RSAPrivateKey(NULL, &start, len);
++	key.rsa_private_key = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &start, len);
+ 
+ 	printf("Private Key file:      %s\n", name);
+ 	printf("  Vboot API:           1.0\n");

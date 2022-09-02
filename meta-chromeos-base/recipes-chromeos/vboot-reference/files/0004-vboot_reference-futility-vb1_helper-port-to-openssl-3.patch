@@ -1,0 +1,26 @@
+Index: vboot_reference/futility/vb1_helper.c
+===================================================================
+--- vboot_reference.orig/futility/vb1_helper.c
++++ vboot_reference/futility/vb1_helper.c
+@@ -8,6 +8,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <openssl/evp.h>
+ #include <openssl/rsa.h>
+ 
+ #include "2api.h"
+@@ -809,10 +810,10 @@ enum futil_file_type ft_recognize_vb1_ke
+ 	if (len < sizeof(uint64_t))
+ 		return FILE_TYPE_UNKNOWN;
+ 	const unsigned char *start = buf + sizeof(uint64_t);
+-	struct rsa_st *rsa =
+-		d2i_RSAPrivateKey(NULL, &start, len - sizeof(uint64_t));
++	struct evp_pkey_st *rsa =
++		d2i_PrivateKey(EVP_PKEY_RSA, NULL, &start, len - sizeof(uint64_t));
+ 	if (rsa) {
+-		RSA_free(rsa);
++		EVP_PKEY_free(rsa);
+ 		return FILE_TYPE_PRIVKEY;
+ 	}
+ 
