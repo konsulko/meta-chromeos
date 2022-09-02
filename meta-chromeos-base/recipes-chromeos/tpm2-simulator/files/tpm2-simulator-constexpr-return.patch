@@ -1,0 +1,13 @@
+Index: tpm2-simulator/tpm_executor_version.cc
+===================================================================
+--- tpm2-simulator.orig/tpm_executor_version.cc
++++ tpm2-simulator/tpm_executor_version.cc
+@@ -25,6 +25,8 @@ constexpr TpmExecutorVersion GetDefaultT
+ #elif USE_TPM1
+   return TpmExecutorVersion::kTpm1;
+ #endif
++  // fallback to tpm2 to avoid "error: no return statement in constexpr function"
++  return TpmExecutorVersion::kTpm2;
+ }
+ }  // namespace
+ 
