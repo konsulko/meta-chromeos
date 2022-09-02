@@ -19,6 +19,7 @@ PACKAGES:remove = "${PN}-dev"
 
 # Cannot have chromeos-cr50-dev as that collides with an automatically generated sub-package of this recipe
 RDEPENDS:${PN} += "chromeos-cr50-dev"
+INSANE_SKIP:${PN} = "dev-deps"
 
 PACKAGECONFIG ??= ""
 
