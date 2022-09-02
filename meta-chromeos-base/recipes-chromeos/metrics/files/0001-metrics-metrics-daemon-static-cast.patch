@@ -1,0 +1,39 @@
+Index: metrics/metrics_daemon.cc
+===================================================================
+--- metrics.orig/metrics_daemon.cc
++++ metrics/metrics_daemon.cc
+@@ -259,7 +259,7 @@ double MetricsDaemon::GetActiveTime() {
+     PLOG(WARNING) << "clock_gettime(CLOCK_MONOTONIC) failed";
+     return 0;
+   } else {
+-    return ts.tv_sec + static_cast<double>(ts.tv_nsec) / (1000 * 1000 * 1000);
++    return static_cast<double>(ts.tv_sec) + static_cast<double>(ts.tv_nsec) / (1000 * 1000 * 1000);
+   }
+ }
+ 
+@@ -784,11 +784,11 @@ void MetricsDaemon::StatsCallback() {
+       vmstats_now.anon_page_faults_ - vmstats_.anon_page_faults_;
+   uint64_t delta_swap_in = vmstats_now.swap_in_ - vmstats_.swap_in_;
+   uint64_t delta_swap_out = vmstats_now.swap_out_ - vmstats_.swap_out_;
+-  uint64_t page_faults_per_second = delta_faults / delta_time;
+-  uint64_t file_page_faults_per_second = delta_file_faults / delta_time;
+-  uint64_t anon_page_faults_per_second = delta_anon_faults / delta_time;
+-  uint64_t swap_in_per_second = delta_swap_in / delta_time;
+-  uint64_t swap_out_per_second = delta_swap_out / delta_time;
++  uint64_t page_faults_per_second = static_cast<double>(delta_faults) / delta_time;
++  uint64_t file_page_faults_per_second = static_cast<double>(delta_file_faults) / delta_time;
++  uint64_t anon_page_faults_per_second = static_cast<double>(delta_anon_faults) / delta_time;
++  uint64_t swap_in_per_second = static_cast<double>(delta_swap_in) / delta_time;
++  uint64_t swap_out_per_second = static_cast<double>(delta_swap_out) / delta_time;
+ 
+   switch (stats_state_) {
+     case kStatsShort:
+@@ -968,7 +968,7 @@ void MetricsDaemon::DetachableBaseCallba
+ 
+     if ((delta_active + delta_suspended) > 0) {
+       double active_ratio =
+-          static_cast<double>(delta_active) / (delta_active + delta_suspended);
++          static_cast<double>(delta_active) / static_cast<double>(delta_active + delta_suspended);
+ 
+       DLOG(INFO) << "Detachable base active_ratio: "
+                  << base::StringPrintf("%.8f", active_ratio);

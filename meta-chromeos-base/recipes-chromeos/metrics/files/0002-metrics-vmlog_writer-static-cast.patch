@@ -1,0 +1,22 @@
+Index: metrics/vmlog_writer.cc
+===================================================================
+--- metrics.orig/vmlog_writer.cc
++++ metrics/vmlog_writer.cc
+@@ -302,7 +302,7 @@ bool RAPLInfo::GetCurrentPower(std::ostr
+ 
+     const base::TimeDelta time_delta = domain.ticks_after - domain.ticks_before;
+ 
+-    double average_power = energy_delta / (time_delta.InSecondsF() * 1e6);
++    double average_power = static_cast<double>(energy_delta) / (time_delta.InSecondsF() * 1e6);
+ 
+     // Skip enormous sample if the counter is reset during suspend-to-RAM
+     if (average_power > kMaxWatts) {
+@@ -505,7 +505,7 @@ bool VmlogWriter::GetCpuUsage(double* cp
+     return false;
+   }
+   *cpu_usage_out =
+-      (cur.non_idle_time_ - prev_cputime_record_.non_idle_time_) /
++      static_cast<double>(cur.non_idle_time_ - prev_cputime_record_.non_idle_time_) /
+       static_cast<double>(cur.total_time_ - prev_cputime_record_.total_time_);
+   prev_cputime_record_ = cur;
+   return true;
