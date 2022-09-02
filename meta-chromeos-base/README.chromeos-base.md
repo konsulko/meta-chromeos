@@ -586,16 +586,6 @@ In file included from <build>/tmp/work/cortexa57-chromeos-linux/chromeos-cr50-de
 This is happening even though `-O2` and `-D_FORTIFY_SOURCE=2` are being passed
 in.
 
-### `trunks` missing `tpm2` include
-
-Somehow the <tpm2/_TPM_Init_fp.h> file is not being found in `-I`
-
-```console
-| ../src/platform2/trunks/tpm_simulator_handle.cc:18:10: fatal error: 'tpm2/_TPM_Init_fp.h' file not found                          
-| #include <tpm2/_TPM_Init_fp.h>                                                                                                    
-|          ^~~~~~~~~~~~~~~~~~~~~ 
-```
-
 ### `MACHINE`s and kernels
 
 During the proof-of-concept stage, builds were mostly performed for the

@@ -15,6 +15,7 @@ DEPENDS += "\
     compiler-rt-sanitizers \
     libbrillo \
     libchrome \
+    libhwsec-foundation \
     libmetrics \
     minijail \
     openssl \
@@ -22,8 +23,8 @@ DEPENDS += "\
     protobuf \
     protobuf-native \
     system-api \
+    tpm2 \
 "
-#tpm2
 
 RDEPENDS:${PN} += "libhwsec-foundation"
 
