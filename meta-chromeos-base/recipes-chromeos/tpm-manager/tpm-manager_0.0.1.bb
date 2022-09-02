@@ -8,7 +8,7 @@ inherit chromeos_gn
 
 CHROMEOS_PN = "tpm_manager"
 
-DEPENDS:append = " libbrillo libchrome libtpmcrypto openssl protobuf"
+DEPENDS:append = " libbrillo libchrome libtpmcrypto openssl protobuf protobuf-native"
 
 S = "${WORKDIR}/src/platform2/${CHROMEOS_PN}"
 B = "${WORKDIR}/build"
