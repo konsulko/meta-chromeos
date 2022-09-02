@@ -1,0 +1,27 @@
+From: Brian Norris <briannorris@chromium.org>
+Date: Fri, 2 Sep 2022 14:04:11 -0700
+Subject: [PATCH] ec: Ignore -Wunused-result
+
+| gsctool.c:1986:2: error: ignoring return value of function declared with 'warn_unused_result' attribute [-Werror,-Wunused-result]
+|         getline(&password_copy, &copy_len, stdin);
+|         ^~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ extra/usb_updater/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/extra/usb_updater/Makefile b/extra/usb_updater/Makefile
+index f1ec4f8b0e46..c5446c8f7539 100644
+--- a/extra/usb_updater/Makefile
++++ b/extra/usb_updater/Makefile
+@@ -17,7 +17,8 @@ CFLAGS  := -std=gnu99 \
+         -Wundef \
+         -Wsign-compare \
+         -Wredundant-decls \
+-        -Wmissing-declarations
++        -Wmissing-declarations \
++        -Wno-unused-result
+ 
+ ifeq ($(DEBUG),1)
+ CFLAGS += -O0
