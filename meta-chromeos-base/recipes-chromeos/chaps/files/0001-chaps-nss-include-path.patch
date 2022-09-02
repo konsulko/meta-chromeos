@@ -1,0 +1,26 @@
+Index: chaps/pkcs11/cryptoki.h
+===================================================================
+--- chaps.orig/pkcs11/cryptoki.h
++++ chaps/pkcs11/cryptoki.h
+@@ -13,7 +13,7 @@
+ 
+ // Note that this file is not the only entrypoint for including pkcs11.h.
+ // chaps.cc also includes pkcs11f.h.
+-#include <nss/pkcs11.h>
++#include <nss3/pkcs11.h>
+ 
+ // Below are some workaround due to problems in the copy of pkcs11.h that we
+ // are including.
+Index: chaps/chaps.cc
+===================================================================
+--- chaps.orig/chaps.cc
++++ chaps/chaps.cc
+@@ -249,7 +249,7 @@ EXPORT_SPEC CK_RV C_GetFunctionList(CK_F
+   // PKCS#11 v3.0 and beyond have additional functions that will not be included
+   // if CK_PKCS11_2_0_ONLY is defined.
+ #define CK_PKCS11_2_0_ONLY
+-#include <nss/pkcs11f.h>
++#include <nss3/pkcs11f.h>
+ #undef CK_PKCS11_FUNCTION_INFO
+   };
+   *ppFunctionList = &functionList;
