@@ -13,7 +13,7 @@ PR = "r146"
 
 DEPENDS += "openssl"
 
-PACKAGECONFIG ??= ""
+PACKAGECONFIG ??= "tpm2_simulator"
 
 # Description of all the possible PACKAGECONFIG fields (comma delimited):
 # 1. Extra arguments that should be added to the configure script argument list (EXTRA_OECONF or PACKAGECONFIG_CONFARGS) if the feature is enabled.
@@ -79,9 +79,9 @@ do_install() {
     install -m 0644 ${S}/tpm_types.h ${D}${includedir}/tpm2/
 
     if ${@bb.utils.contains('PACKAGECONFIG', 'test', 'true', 'false', d)} || \
-       ${@bb.utils.contains('PACKAGECONFIG', 'tpm2_simlator', 'true', 'false', d)} ; then
+       ${@bb.utils.contains('PACKAGECONFIG', 'tpm2_simulator', 'true', 'false', d)} ; then
         install -m 0644 ${S}/tpm_manufacture.h ${D}${includedir}/tpm2/
-	install -m 0644 ${S}/tpm_simulator.h ${D}${includedir}/tpm2/
+	install -m 0644 ${S}/tpm_simulator.hpp ${D}${includedir}/tpm2/
     fi
 }
 
